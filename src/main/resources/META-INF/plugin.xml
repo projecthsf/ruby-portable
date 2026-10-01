@@ -1,0 +1,120 @@
+<idea-plugin>
+    <id>io.genai.ruby</id>
+    <name>Ruby Portable</name>
+    <version>0.1.0</version>
+    <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
+
+    <description><![CDATA[
+        <p><b>Write &amp; run Ruby in IntelliJ IDEA Community — for free.</b> Ruby Portable adds
+        lightweight Ruby support to the free IDE, with <b>no RubyMine license</b> and <b>no
+        system-wide Ruby install</b> required. IntelliJ IDEA Community doesn't bundle the official
+        Ruby plugin (that's Ultimate / RubyMine only), so this fills the gap.</p>
+        <ul>
+          <li><b>Portable Ruby</b> — download a self-contained interpreter from inside the IDE
+              (like the JDK downloader). Stored under <code>~/.ruby-portable</code> with its own
+              isolated <code>GEM_HOME</code>, so nothing touches a system Ruby, rbenv, rvm or your
+              shell profile. Pick a version and switch anytime.</li>
+          <li><b>Run with one click</b> — a green ▶ gutter marker and right-click ▸ Run. In a
+              project with a <code>Gemfile</code> the script runs under <code>bundle exec</code>
+              from the Gemfile's directory, so gems and relative paths resolve the way they do in
+              a terminal; elsewhere it's a plain <code>ruby script.rb</code>.</li>
+          <li><b>Code intelligence</b> (optional) — completion, go-to-definition, hover docs and
+              diagnostics via <b>ruby-lsp</b>, Shopify's Ruby language server, bridged with the
+              free <b>LSP4IJ</b> plugin. One click installs it as a gem into your portable
+              interpreter. Fully offline; no Node.js.</li>
+          <li><b>Syntax highlighting</b> — for <code>.rb</code> files (keywords, symbols, string
+              and <code>%w</code> literals, string interpolation, instance/class/global variables,
+              regexes, heredocs and comments), even without the language server.</li>
+          <li><b>Run gem &amp; bundler</b> — <code>bundle install</code> / <code>update</code> /
+              <code>exec</code>, <code>gem install</code> / <code>list</code>, and
+              <code>rake</code> in a console.</li>
+        </ul>
+        <p><b>macOS and Linux</b> can download an interpreter in-IDE. On <b>Windows</b>, point the
+        plugin at an existing Ruby with <i>Add from Disk…</i> — a bundled download is not offered
+        yet because no relocatable Windows build is published in a format the IDE can unpack.</p>
+        <p>Active on IDEs without built-in Ruby (IDEA Community, PyCharm Community, WebStorm, …).
+        On RubyMine / IDEA Ultimate the native Ruby support is used instead — this plugin steps
+        aside.</p>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <b>0.1.0</b>
+        <ul>
+          <li>Initial release.</li>
+          <li>Download a self-contained portable Ruby from inside the IDE (macOS / Linux),
+              isolated under <code>~/.ruby-portable</code> with its own GEM_HOME.</li>
+          <li>Run a .rb file: ▶ gutter marker, <code>bundle exec ruby</code> from the Gemfile's
+              directory when there is one, plain <code>ruby</code> otherwise.</li>
+          <li>Optional ruby-lsp code intelligence via LSP4IJ (one-click setup), lexer-based syntax
+              highlighting, and a bundler / gem / rake runner.</li>
+        </ul>
+    ]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <!-- Where official Ruby support exists (RubyMine, or IDEA Ultimate with the Ruby plugin
+         installed) we don't load at all. That lets the <fileType> below claim `.rb` statically
+         without ever racing the official plugin for the extension — see
+         ConflictingFileTypeMappingTracker, which would otherwise hand `.rb` to whichever plugin
+         registered last. -->
+    <incompatible-with>org.jetbrains.plugins.ruby</incompatible-with>
+
+    <!-- Optional: Ruby code intelligence (completion / navigation / errors) via LSP4IJ +
+         ruby-lsp. Loads only when LSP4IJ is installed, so the core plugin (run a .rb file,
+         highlighting, portable interpreters) stays dependency-free and works on every IDE. -->
+    <depends optional="true" config-file="lsp.xml">com.redhat.devtools.lsp4ij</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <sdkType implementation="io.genai.ruby.sdk.RubySdkType"/>
+
+        <!-- File type + highlighting. `extensions=` is declared statically for two reasons:
+             .rb is recognised on first open (no startup pass needed), and JetBrains Marketplace
+             indexes this attribute — it is the ONLY input to the "plugin recommended for *.rb"
+             suggestion the IDE shows on an unknown file type. Safe to claim it because
+             <incompatible-with> above keeps us out of every IDE that has official Ruby support.
+             RubyLanguageActivation still binds .rb at runtime as a fallback; re-associating an
+             extension we already own is a no-op. Language id is "RubyPortable" (unique). -->
+        <fileType
+            name="Ruby File"
+            language="RubyPortable"
+            implementationClass="io.genai.ruby.lang.RubyFileType"
+            fieldName="INSTANCE"
+            extensions="rb"/>
+        <lang.syntaxHighlighterFactory
+            language="RubyPortable"
+            implementationClass="io.genai.ruby.lang.RubySyntaxHighlighterFactory"/>
+        <lang.parserDefinition
+            language="RubyPortable"
+            implementationClass="io.genai.ruby.lang.RubyParserDefinition"/>
+
+        <postStartupActivity implementation="io.genai.ruby.lang.RubyLanguageActivation"/>
+
+        <configurationType implementation="io.genai.ruby.run.RubyRunConfigurationType"/>
+        <runConfigurationProducer implementation="io.genai.ruby.run.RubyRunConfigurationProducer"/>
+        <runLineMarkerContributor
+            language="RubyPortable"
+            implementationClass="io.genai.ruby.run.RubyRunLineMarkerContributor"/>
+
+        <applicationConfigurable
+            parentId="language"
+            id="io.genai.ruby.sdks"
+            displayName="Ruby Portable"
+            instance="io.genai.ruby.settings.RubyConfigurable"/>
+
+        <editorNotificationProvider implementation="io.genai.ruby.notify.RubySetupNotificationProvider"/>
+        <editorNotificationProvider implementation="io.genai.ruby.notify.RubyCodeIntelligenceNotificationProvider"/>
+    </extensions>
+
+    <actions>
+        <action
+            id="io.genai.ruby.RunGemTool"
+            class="io.genai.ruby.tools.RunGemToolAction"
+            text="Run Bundler / Gem Tool (Portable)…"
+            description="Run a bundle / gem / rake command using the Ruby Portable interpreter"
+            icon="/icons/ruby.svg">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

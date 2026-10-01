@@ -1,0 +1,22 @@
+<idea-plugin>
+    <!-- Optional Ruby code-intelligence layer. Loaded only when the LSP4IJ plugin is present
+         (declared via <depends optional config-file="lsp.xml"> in plugin.xml). Registers a
+         ruby-lsp-backed language server with LSP4IJ and maps it to our RubyPortable file type,
+         so it activates only where our file type owns .rb (IDEA Community, not RubyMine). -->
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server
+            id="rubyPortable"
+            name="Ruby (Portable)"
+            factoryClass="io.genai.ruby.lsp.RubyLanguageServerFactory">
+            <description><![CDATA[
+                Ruby completion, navigation and diagnostics via ruby-lsp, running on the portable
+                Ruby interpreter. Fully local and offline.
+            ]]></description>
+        </server>
+        <!-- languageId MUST be "ruby": ruby-lsp ignores files whose LSP languageId isn't "ruby".
+             Our IntelliJ language id is "RubyPortable" (unique, to coexist with the official Ruby
+             plugin), so without this override LSP4IJ would send languageId="rubyportable" and
+             ruby-lsp would reject every file. -->
+        <languageMapping language="RubyPortable" serverId="rubyPortable" languageId="ruby"/>
+    </extensions>
+</idea-plugin>

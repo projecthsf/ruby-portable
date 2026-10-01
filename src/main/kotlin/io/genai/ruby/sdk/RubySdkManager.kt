@@ -15,7 +15,7 @@ import java.nio.file.Paths
  */
 object RubySdkManager {
 
-    /** Root under which downloaded toolchains live; only these are deleted from disk. */
+    /** Root under which downloaded interpreters live; only these are deleted from disk. */
     fun downloadRoot(): Path = Paths.get(System.getProperty("user.home"), ".ruby-portable")
 
     fun plannedHome(version: String): Path = downloadRoot().resolve("ruby-$version")
@@ -69,7 +69,7 @@ object RubySdkManager {
     data class CleanupResult(val removed: Int, val added: Int)
 
     /**
-     * Remove registered toolchains whose files are gone, and register any install sitting
+     * Remove registered interpreters whose files are gone, and register any install sitting
      * under [downloadRoot] that isn't registered yet (e.g. an interrupted download).
      */
     fun cleanUp(): CleanupResult {

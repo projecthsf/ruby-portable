@@ -10,7 +10,7 @@ import io.genai.ruby.sdk.RubySdkManager
 import io.genai.ruby.sdk.RubySdkType
 
 /**
- * Remembers which Ruby interpreter is the "current" one. Application-level, since the toolchains
+ * Remembers which Ruby interpreter is the "current" one. Application-level, since the interpreters
  * (SDKs) are application-level. Run configs with no explicit interpreter fall back to this.
  */
 @Service(Service.Level.APP)

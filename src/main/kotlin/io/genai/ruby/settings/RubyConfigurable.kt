@@ -45,7 +45,7 @@ class RubyConfigurable : Configurable {
         return panel {
             row {
                 comment(
-                    "Ruby Portable toolchains. Downloads are stored under " +
+                    "Ruby Portable interpreters. Downloads are stored under " +
                         "<code>~/.ruby-portable</code> and shared with Ruby run configurations.",
                 )
             }
